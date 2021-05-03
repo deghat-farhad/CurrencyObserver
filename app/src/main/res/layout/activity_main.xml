@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="40dp"
-        android:text="Start !"
+        android:text="Start"
         android:textSize="17sp" />
 
     <TextView
@@ -23,4 +23,14 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="30dp"
         android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/stop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/output"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="40dp"
+        android:text="Stop"
+        android:textSize="17sp" />
 </RelativeLayout>

@@ -5,35 +5,24 @@ import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.google.gson.Gson
 import okhttp3.*
-import okio.ByteString
 
 class MainActivity : AppCompatActivity() {
     private var start: Button? = null
+    private var stop: Button? = null
     private var output: TextView? = null
     private var client: OkHttpClient? = null
 
     private val NORMAL_CLOSURE_STATUS = 1000
 
+    lateinit var webSocket: WebSocket
+
+    val gson = Gson()
+
     private inner class EchoWebSocketListener : WebSocketListener() {
         override fun onMessage(webSocket: WebSocket, text: String) {
-            output("Receiving : $text")
-        }
-
-        override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
-            output("Receiving bytes : " + bytes.hex())
-        }
-
-        override fun onClosing(
-            webSocket: WebSocket,
-            code: Int,
-            reason: String
-        ) {
-            webSocket.close(
-                NORMAL_CLOSURE_STATUS,
-                null
-            )
-            output("Closing : $code / $reason")
+            output(text)
         }
 
         override fun onFailure(
@@ -41,35 +30,38 @@ class MainActivity : AppCompatActivity() {
             t: Throwable,
             response: Response?
         ) {
-            output("Error : " + t.message)
+            t.stackTrace
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        start = findViewById<View>(R.id.start) as Button
+        start = findViewById(R.id.start)
+        stop = findViewById(R.id.stop)
         output = findViewById<View>(R.id.output) as TextView
-        client = OkHttpClient()
         start!!.setOnClickListener { start() }
+        stop?.setOnClickListener { stop() }
     }
 
     private fun start() {
+        client = OkHttpClient()
         val request =
             Request.Builder().url("wss://stream.binance.com:9443/ws/btcusdt@trade")
                 .build()
         val listener = EchoWebSocketListener()
-        client!!.newWebSocket(request, listener)
+        webSocket = client!!.newWebSocket(request, listener)
         client!!.dispatcher.executorService.shutdown()
     }
 
     private fun output(txt: String) {
+        println(txt)
         runOnUiThread {
-            output!!.text = """
-     ${output!!.text}
-     
-     $txt
-     """.trimIndent()
+            output!!.text = gson.fromJson(txt, Trade::class.java).p.toString()
         }
+    }
+
+    private fun stop() {
+        webSocket.close(NORMAL_CLOSURE_STATUS, "")
     }
 }
